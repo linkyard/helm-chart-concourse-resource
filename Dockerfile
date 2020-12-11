@@ -23,7 +23,7 @@ RUN apk add --update --no-cache bash jq git tzdata curl ca-certificates && \
     rm -rf linux-amd64 && \
     apk del curl && \
     rm -f /var/cache/apk/*
-RUN helm plugin install https://github.com/chartmuseum/helm-push.git
+RUN helm plugin install --version master https://github.com/sonatype-nexus-community/helm-nexus-push.git
 COPY --from=builder assets/ /opt/resource/
 RUN chmod +x /opt/resource/*
 
