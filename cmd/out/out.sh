@@ -34,9 +34,7 @@ version_arg=""
 repo_name="put-${RANDOM}"
 helm repo add ${repo_name} ${repository_url} ${auth_args}
 
-export username
-export password
-helm nexus-push ${repo_name} ${repository}
+USERNAME="${username}" PASSWORD="${password}" helm nexus-push ${repo_name} ${repository}
 
 [ -f "$(dirname ${repository})/metadata.json" ] && \
     metadata=$(cat "$(dirname ${repository})/metadata.json") || \
