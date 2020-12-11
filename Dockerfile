@@ -21,7 +21,6 @@ RUN apk add --update --no-cache bash jq git tzdata curl ca-certificates && \
     mv linux-amd64/helm /usr/bin/helm && \
     chmod +x /usr/bin/helm && \
     rm -rf linux-amd64 && \
-    apk del curl && \
     rm -f /var/cache/apk/*
 RUN helm plugin install --version master https://github.com/linkyard/helm-nexus-push.git
 COPY --from=builder assets/ /opt/resource/
