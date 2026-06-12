@@ -10,6 +10,7 @@ type Source struct {
 	SkipTLSValidation  bool   `json:"skip_tls_validation"`
 	SortBy             string `json:"sort_by"`
 	IncludePreReleases bool   `json:"include_pre_releases"`
+	PushType           string `json:"push_type"`
 }
 
 type Version struct {
