@@ -12,10 +12,6 @@ sourceDir=$1
 
 cd ${sourceDir}
 
-tmpfile=$(mktemp)
-echo "Adding debug information to $tmpfile"
-echo "${request}" > $tmpfile
-
 repository_url=$(echo ${request} | jq -r '.source.repository_url // ""')
 chart=$(echo ${request} | jq -r '.source.chart // ""')
 username=$(echo ${request} | jq -r '.source.username // ""')
@@ -24,22 +20,24 @@ skip_tls_validation=$(echo ${request} | jq -r '.source.skip_tls_validation // ""
 
 repository=$(echo ${request} | jq -r '.params.repository // "."')
 version_file=$(echo ${request} | jq -r  '.params.version_file // ""')
+push_type=$(echo ${request} | jq -r '.source.push_type // "nexus-push"')
 
-auth_args=""
-[[ -z "${username}" ]] || auth_args="--username ${username} --password ${password}"
+# Resolve glob to actual chart file
+chart_file=$(ls ${repository} 2>/dev/null | head -1)
+[[ -z "${chart_file}" ]] && chart_file="${repository}"
 
-version_arg=""
-[[ -f "${version_file}" ]] && version_arg="--version $(cat ${version_file})"
-
-repo_name="put-${RANDOM}"
-helm repo add ${repo_name} ${repository_url} ${auth_args}
-
-USERNAME="${username}" PASSWORD="${password}" helm nexus-push ${repo_name} ${repository}
+if [[ "${push_type}" == "cm-push" ]]; then
+  HELM_REPO_USERNAME="${username}" HELM_REPO_PASSWORD="${password}" helm cm-push "${chart_file}" "${repository_url}"
+else
+  repo_name="put-${RANDOM}"
+  helm repo add ${repo_name} ${repository_url} --username "${username}" --password "${password}"
+  USERNAME="${username}" PASSWORD="${password}" helm nexus-push ${repo_name} "${chart_file}"
+fi
 
 [ -f "$(dirname ${repository})/metadata.json" ] && \
     metadata=$(cat "$(dirname ${repository})/metadata.json") || \
     metadata="[ {\"name\": \"repository\", \"value\": \"${repository_url}\"}, {\"name\": \"chart\", \"value\": \"${chart}\"} ]"
 
-version=$(helm search repo "${repo_name}/${chart}" -o json | jq -r --arg chart "${repo_name}/${chart}" '.[] | select(.name==$chart) | .version')
+version=$(helm show chart "${chart_file}" | grep '^version:' | awk '{print $2}')
 
 jq -n --arg version "${version}" --argjson metadata "${metadata}" '{"version": {"version": $version}, "metadata": $metadata }' >&3

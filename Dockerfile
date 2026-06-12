@@ -13,8 +13,8 @@ RUN set -e; for pkg in $(go list ./...); do \
         go test -o "/tests/$(basename $pkg).test" -c $pkg; \
     done
 
-FROM alpine:edge AS resource
-ARG VERSION=3.2.2
+FROM alpine:3.21 AS resource
+ARG VERSION=3.17.3
 
 RUN apk add --update --no-cache bash jq git tzdata curl ca-certificates && \
     curl -L https://get.helm.sh/helm-v${VERSION}-linux-amd64.tar.gz |tar xvz && \
@@ -22,7 +22,8 @@ RUN apk add --update --no-cache bash jq git tzdata curl ca-certificates && \
     chmod +x /usr/bin/helm && \
     rm -rf linux-amd64 && \
     rm -f /var/cache/apk/*
-RUN helm plugin install --version master https://github.com/linkyard/helm-nexus-push.git
+RUN helm plugin install https://github.com/chartmuseum/helm-push && \
+    helm plugin install --version master https://github.com/linkyard/helm-nexus-push.git
 COPY --from=builder assets/ /opt/resource/
 RUN chmod +x /opt/resource/*
 

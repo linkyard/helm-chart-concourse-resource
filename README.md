@@ -29,6 +29,9 @@ resources:
 * `skip_tls_validation`: *Optional*. Defaults to `false`. Please don't.
 * `sort_by`: *Optional*. Defaults to `semver`. If versions are not semantically versioned or want to version by date
   created, use `created` instead.
+* `push_type`: *Optional*. Defaults to `nexus-push`. Controls the push mechanism used by `out`:
+  * `nexus-push`: Push to a Sonatype Nexus Helm repository using `helm nexus-push`.
+  * `cm-push`: Push to a ChartMuseum-compatible registry (e.g. Forgejo, Gitea) using `helm cm-push`.
 
 ## Behavior
 
