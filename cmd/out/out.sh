@@ -38,6 +38,6 @@ fi
     metadata=$(cat "$(dirname ${repository})/metadata.json") || \
     metadata="[ {\"name\": \"repository\", \"value\": \"${repository_url}\"}, {\"name\": \"chart\", \"value\": \"${chart}\"} ]"
 
-version=$(helm show chart "${chart_file}" | grep '^version:' | awk '{print $2}')
+version=$(helm show chart "${chart_file}" | grep '^version:' | awk '{print $2}' | tr -d "'\"")
 
 jq -n --arg version "${version}" --argjson metadata "${metadata}" '{"version": {"version": $version}, "metadata": $metadata }' >&3
