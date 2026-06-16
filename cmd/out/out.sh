@@ -26,11 +26,12 @@ push_type=$(echo ${request} | jq -r '.source.push_type // "nexus-push"')
 chart_file=$(ls ${repository} 2>/dev/null | head -1)
 [[ -z "${chart_file}" ]] && chart_file="${repository}"
 
+repo_name="put-${RANDOM}"
+helm repo add ${repo_name} ${repository_url} --username "${username}" --password "${password}"
+
 if [[ "${push_type}" == "cm-push" ]]; then
   HELM_REPO_USERNAME="${username}" HELM_REPO_PASSWORD="${password}" helm cm-push "${chart_file}" "${repository_url}"
 else
-  repo_name="put-${RANDOM}"
-  helm repo add ${repo_name} ${repository_url} --username "${username}" --password "${password}"
   USERNAME="${username}" PASSWORD="${password}" helm nexus-push ${repo_name} "${chart_file}"
 fi
 
@@ -38,6 +39,7 @@ fi
     metadata=$(cat "$(dirname ${repository})/metadata.json") || \
     metadata="[ {\"name\": \"repository\", \"value\": \"${repository_url}\"}, {\"name\": \"chart\", \"value\": \"${chart}\"} ]"
 
-version=$(helm show chart "${chart_file}" | grep '^version:' | awk '{print $2}' | tr -d "'\"")
+helm repo update ${repo_name}
+version=$(helm search repo "${repo_name}/${chart}" -o json | jq -r --arg chart "${repo_name}/${chart}" '.[] | select(.name==$chart) | .version')
 
 jq -n --arg version "${version}" --argjson metadata "${metadata}" '{"version": {"version": $version}, "metadata": $metadata }' >&3
